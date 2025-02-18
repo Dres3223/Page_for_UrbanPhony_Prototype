@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Archivos Subidos</title>
+    <link
+      href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css"
+      rel="stylesheet"
+    />
+    <style>
+      .file-box {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        padding: 15px;
+        border: 1px solid #ddd;
+        border-radius: 8px;
+        background: #fff;
+        height: 100%;
+      }
+      .btn-sm {
+        width: 100px;
+        border-radius: 20px;
+        transition: 0.3s;
+      }
+      .btn-sm:hover {
+        filter: brightness(1.2);
+      }
+      .header {
+        background: #000;
+        color: gainsboro;
+        text-align: center;
+        padding: 10px;
+        box-shadow: 0px 24px 26px rgba(0, 0, 0, 0.1);
+        display: flex;
+        align-items: center;
+        justify-content: flex-start;
+        padding-left: 20px;
+      }
+      .header img {
+        height: 90px;
+        margin-right: 15px;
+      }
+      .header h1 {
+        font-size: 20px;
+        opacity: 0.9;
+        padding: 5px;
+      }
+      .col-md-6 {
+        display: flex;
+      }
+    </style>
+  </head>
+  <body class="bg-light">
+    <header class="header">
+      <img src="images/urban-02.png" alt="Logo" />
+      <h1>Data Log</h1>
+    </header>
+
+    <div class="container mt-4">
+      <div id="fileList" class="row g-3"></div>
+    </div>
+
+    <div class="modal fade" id="csvModal" tabindex="-1" aria-hidden="true">
+      <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 class="modal-title">CSV</h5>
+            <button
+              type="button"
+              class="btn-close"
+              data-bs-dismiss="modal"
+            ></button>
+          </div>
+          <div class="modal-body">
+            <table class="table table-bordered" id="csvTable"></table>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <script>
+      fetch("/api/files")
+        .then((response) => response.json())
+        .then((data) => {
+          const fileList = document.getElementById("fileList");
+          let record = 1;
+          for (let i = 0; i < data.files.length; i += 2) {
+            const row = document.createElement("div");
+            row.classList.add("row", "g-3");
+
+            const col = document.createElement("div");
+            col.classList.add("col-md-12");
+
+            const card = document.createElement("div");
+            card.classList.add("card", "shadow-sm", "p-3");
+
+            const cardBody = document.createElement("div");
+            cardBody.classList.add("card-body");
+
+            const rowContent = document.createElement("div");
+            rowContent.classList.add("row");
+
+            const title = document.createElement("h5");
+            title.textContent = `Record ${record}`;
+            title.classList.add("mb-3");
+            cardBody.appendChild(title);
+
+            [data.files[i], data.files[i + 1]].forEach((file) => {
+              if (!file) return;
+
+              const colInner = document.createElement("div");
+              colInner.classList.add("col-md-6");
+
+              const fileBox = document.createElement("div");
+              fileBox.classList.add("file-box", "w-100");
+
+              const fileLabel = document.createElement("p");
+              fileLabel.textContent = file;
+              fileBox.appendChild(fileLabel);
+
+              const fileLink = document.createElement("a");
+              fileLink.href = `/uploads/${file}`;
+              fileLink.textContent = "Download";
+              fileLink.classList.add("btn", "btn-success", "btn-sm", "mb-2");
+              fileLink.setAttribute("download", file);
+              fileBox.appendChild(fileLink);
+
+              if (file.endsWith(".wav")) {
+                const audioElement = document.createElement("audio");
+                audioElement.controls = true;
+                audioElement.src = `/uploads/${file}`;
+                audioElement.classList.add("w-100");
+                fileBox.appendChild(audioElement);
+              }
+
+              if (file.endsWith(".csv")) {
+                const viewButton = document.createElement("button");
+                viewButton.textContent = "See CSV";
+                viewButton.classList.add("btn", "btn-primary", "btn-sm");
+                viewButton.setAttribute("data-bs-toggle", "modal");
+                viewButton.setAttribute("data-bs-target", "#csvModal");
+                viewButton.addEventListener("click", () => loadCSV(file));
+                fileBox.appendChild(viewButton);
+              }
+
+              colInner.appendChild(fileBox);
+              rowContent.appendChild(colInner);
+            });
+
+            cardBody.appendChild(rowContent);
+            card.appendChild(cardBody);
+            col.appendChild(card);
+            row.appendChild(col);
+            fileList.appendChild(row);
+            record++;
+          }
+        })
+        .catch((error) =>
+          console.error("Error al cargar los archivos:", error)
+        );
+
+      function loadCSV(file) {
+        fetch(`/uploads/${file}`)
+          .then((response) => response.text())
+          .then((csvText) => {
+            const table = document.getElementById("csvTable");
+            table.innerHTML = "";
+            csvText.split("\n").forEach((row, index) => {
+              const tr = document.createElement("tr");
+              row.split(",").forEach((cell) => {
+                const td = document.createElement(index === 0 ? "th" : "td");
+                td.textContent = cell.trim();
+                tr.appendChild(td);
+              });
+              table.appendChild(tr);
+            });
+          });
+      }
+    </script>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+  </body>
+</html>
