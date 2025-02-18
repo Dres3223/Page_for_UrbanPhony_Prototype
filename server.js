@@ -5,6 +5,8 @@ const formidable = require("formidable");
 const app = express();
 const PORT = process.env.PORT || 3000;
 
+const cors = require("cors");
+app.use(cors());
 // Ruta de la carpeta de archivos subidos
 const UPLOADS_DIR = path.join(__dirname, "uploads");
 
