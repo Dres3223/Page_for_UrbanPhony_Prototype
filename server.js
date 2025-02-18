@@ -3,7 +3,7 @@ const path = require("path");
 const fs = require("fs");
 const formidable = require("formidable");
 const app = express();
-const PORT = 3000;
+const PORT = process.env.PORT || 3000;
 
 // Ruta de la carpeta de archivos subidos
 const UPLOADS_DIR = path.join(__dirname, "uploads");
@@ -63,5 +63,5 @@ app.get("/", (req, res) => {
 
 // Iniciar el servidor
 app.listen(PORT, () => {
-  console.log(`Servidor escuchando en http://localhost:${PORT}`);
+  console.log(`Servidor escuchando en el puerto ${PORT}`);
 });
